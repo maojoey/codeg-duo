@@ -1392,7 +1392,10 @@
       "sendAttributionHeader": "向接口发送归属/计费标识",
       "sendAttributionHeaderAria": "向接口发送 Claude Code 归属/计费标识",
       "disableNonessentialTraffic": "禁用遥测或多余的网络请求",
-      "disableNonessentialTrafficAria": "禁用 Claude Code 遥测或多余的网络请求"
+      "disableNonessentialTrafficAria": "禁用 Claude Code 遥测或多余的网络请求",
+      "promptSuggestions": "每轮回复后建议下一条消息",
+      "promptSuggestionsAria": "允许 Claude Code 在每轮回复后建议下一条消息",
+      "promptSuggestionsHint": "显示在空的输入框中，按 Tab 采用。新会话启动后生效。"
     },
     "dialogs": {
       "confirmDeleteProvider": "确认删除 Provider {providerId}？",
@@ -3096,6 +3099,7 @@
       },
       "messageInput": {
         "askAnything": "请开始输入...",
+        "promptSuggestionPlaceholder": "{suggestion}（按 Tab 采用）",
         "removeAttachmentAria": "移除 {name}",
         "attachFiles": "附加文件",
         "attachLocalUpload": "附加本地文件",

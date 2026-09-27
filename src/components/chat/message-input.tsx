@@ -264,6 +264,13 @@ interface MessageInputProps {
    * with no session, or a brand-new one — which then simply has no history.
    */
   getSentHistory?: () => string[]
+  /**
+   * The agent's suggested next prompt (Claude's `prompt_suggestion`). While the
+   * box is empty it stands in for the placeholder, and a bare Tab types it in
+   * for the user to send or edit. `null`/absent offers nothing and leaves Tab
+   * alone. Ignored while a turn runs or a queued message is being edited.
+   */
+  promptSuggestion?: string | null
   injectContent?: ComposerInjectContent | null
   onInjectConsumed?: () => void
   /**
@@ -401,6 +408,7 @@ export function MessageInput({
   injectContent,
   onInjectConsumed,
   getSentHistory,
+  promptSuggestion,
   tall = false,
 }: MessageInputProps) {
   const t = useTranslations("Folder.chat.messageInput")
@@ -444,6 +452,14 @@ export function MessageInput({
   const { shortcuts } = useShortcutSettings()
   const effectiveDraftStorageKey = draftStorageKey ?? null
   const resolvedPlaceholder = placeholder ?? t("askAnything")
+  const activeSuggestion =
+    !isPrompting && !isEditingQueueItem && !disabled && promptSuggestion
+      ? promptSuggestion
+      : null
+  const shownPlaceholder =
+    activeSuggestion !== null
+      ? t("promptSuggestionPlaceholder", { suggestion: activeSuggestion })
+      : resolvedPlaceholder
   const editorRef = useRef<RichComposerHandle>(null)
   // Prompt-history navigation. `historyRef` is seeded from `getSentHistory`
   // lazily, the first time the user steps into history, so a session that never
@@ -882,6 +898,17 @@ export function MessageInput({
     },
     [flushDraftSave, getSentHistory, isEditingQueueItem]
   )
+
+  // Tab in the empty box takes the suggested prompt. It is typed in rather than
+  // sent: the user still sees exactly what goes out and can edit it first.
+  const handleEmptyTabKeyDown = useCallback((): boolean => {
+    if (activeSuggestion === null) return false
+    const composer = editorRef.current
+    if (!composer) return false
+    composer.setText(activeSuggestion)
+    composer.focus()
+    return true
+  }, [activeSuggestion])
 
   const handleComposerReady = useCallback(() => {
     setComposerReady(true)
@@ -2204,7 +2231,7 @@ export function MessageInput({
               />
               <RichComposer
                 ref={editorRef}
-                placeholder={resolvedPlaceholder}
+                placeholder={shownPlaceholder}
                 ariaLabel={resolvedPlaceholder}
                 autoFocus={autoFocus}
                 referenceSearch={referenceSearch}
@@ -2227,6 +2254,7 @@ export function MessageInput({
                 isExternalMenuOpen={slashMenuVisible}
                 onExternalMenuKeyDown={handleExternalMenuKeyDown}
                 onHistoryKeyDown={handleHistoryKeyDown}
+                onEmptyTabKeyDown={handleEmptyTabKeyDown}
                 // `grow`, not `flex-1`: a content flex basis, so the editable
                 // area is always at least as tall as the text it holds even
                 // where no free space is handed out. A zero basis (`flex-1`)

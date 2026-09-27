@@ -89,6 +89,9 @@ interface ChatInputProps {
    * disabled and the chat could never be started.
    */
   allowOfflineCompose?: boolean
+  /** Pass-through: see `MessageInput.promptSuggestion`. Offered only while the
+   *  session is connected and idle. */
+  promptSuggestion?: string | null
   injectContent?: ComposerInjectContent | null
   onInjectConsumed?: () => void
   /** Drop the input's own horizontal padding when an ancestor already supplies
@@ -141,6 +144,7 @@ export const ChatInput = memo(function ChatInput({
   onAddFeedback,
   feedbackAddDisabled,
   allowOfflineCompose = false,
+  promptSuggestion,
   injectContent,
   onInjectConsumed,
   flush = false,
@@ -226,6 +230,7 @@ export const ChatInput = memo(function ChatInput({
         folderPickerOverride={folderPickerOverride}
         draftStorageKey={draftStorageKey}
         getSentHistory={getSentHistory}
+        promptSuggestion={isConnected ? promptSuggestion : null}
         isActive={isActive}
         showActiveFlow={showActiveFlow}
         onEnqueue={onEnqueue}

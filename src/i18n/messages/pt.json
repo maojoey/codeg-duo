@@ -1392,7 +1392,10 @@
       "sendAttributionHeader": "Enviar identificador de atribuição/cobrança para a API",
       "sendAttributionHeaderAria": "Enviar o identificador de atribuição/cobrança do Claude Code para a API",
       "disableNonessentialTraffic": "Desativar a telemetria ou solicitações de rede desnecessárias",
-      "disableNonessentialTrafficAria": "Desativar a telemetria ou solicitações de rede desnecessárias do Claude Code"
+      "disableNonessentialTrafficAria": "Desativar a telemetria ou solicitações de rede desnecessárias do Claude Code",
+      "promptSuggestions": "Sugerir a próxima mensagem após cada resposta",
+      "promptSuggestionsAria": "Permitir que o Claude Code sugira a próxima mensagem após cada resposta",
+      "promptSuggestionsHint": "Exibida na caixa de entrada vazia; pressione Tab para usá-la. Entra em vigor ao iniciar uma sessão."
     },
     "dialogs": {
       "confirmDeleteProvider": "Excluir o provedor {providerId}?",
@@ -3096,6 +3099,7 @@
       },
       "messageInput": {
         "askAnything": "Pergunte qualquer coisa...",
+        "promptSuggestionPlaceholder": "{suggestion}  (Tab para usar)",
         "removeAttachmentAria": "Remover {name}",
         "attachFiles": "Anexar arquivos",
         "addActions": "Adicionar",

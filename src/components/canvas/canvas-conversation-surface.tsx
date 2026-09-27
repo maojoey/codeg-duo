@@ -758,6 +758,7 @@ export function CanvasConversationSurface({
           defaultPath={workingDir}
           agentName={getAgentLabel(agentType)}
           claudeApiRetry={conn.claudeApiRetry}
+          promptSuggestion={conn.promptSuggestion}
           sessionFailures={conn.sessionFailures}
           onSessionFailureDismiss={handleSessionFailureDismiss}
           asyncTasks={conn.asyncTasks}

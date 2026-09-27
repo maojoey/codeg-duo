@@ -2241,6 +2241,7 @@ const ConversationTabView = memo(function ConversationTabView({
       defaultPath={workingDirForConnection}
       agentName={getAgentLabel(selectedAgent)}
       claudeApiRetry={conn.claudeApiRetry}
+      promptSuggestion={conn.promptSuggestion}
       sessionFailures={conn.sessionFailures}
       onSessionFailureDismiss={handleSessionFailureDismiss}
       asyncTasks={conn.asyncTasks}

@@ -468,6 +468,42 @@ describe("RichComposer text paste (plain-text schema)", () => {
   })
 })
 
+describe("RichComposer empty-box Tab (suggested prompt)", () => {
+  it("offers a bare Tab in the empty box to the host", async () => {
+    const onEmptyTabKeyDown = vi.fn(() => true)
+    const { ref } = await mount({ onEmptyTabKeyDown })
+    act(() => ref.current?.focus())
+    const dom = ref.current?.getEditor()?.view.dom as HTMLElement
+
+    const event = pressKey(dom, { key: "Tab" })
+
+    expect(onEmptyTabKeyDown).toHaveBeenCalledTimes(1)
+    expect(event.defaultPrevented).toBe(true)
+  })
+
+  it("keeps Tab's default when the host has nothing to offer", async () => {
+    const onEmptyTabKeyDown = vi.fn(() => false)
+    const { ref } = await mount({ onEmptyTabKeyDown })
+    act(() => ref.current?.focus())
+    const dom = ref.current?.getEditor()?.view.dom as HTMLElement
+
+    expect(pressKey(dom, { key: "Tab" }).defaultPrevented).toBe(false)
+  })
+
+  it("never asks once the user has typed, or for Shift+Tab", async () => {
+    const onEmptyTabKeyDown = vi.fn(() => true)
+    const { ref } = await mount({ onEmptyTabKeyDown })
+    act(() => ref.current?.focus())
+    const dom = ref.current?.getEditor()?.view.dom as HTMLElement
+
+    pressKey(dom, { key: "Tab", shiftKey: true })
+    act(() => ref.current?.setText("hello"))
+    pressKey(dom, { key: "Tab" })
+
+    expect(onEmptyTabKeyDown).not.toHaveBeenCalled()
+  })
+})
+
 describe("RichComposer prompt-history Arrow routing", () => {
   it("routes ArrowUp to onHistoryKeyDown at the document start and consumes it", async () => {
     const onHistoryKeyDown = vi.fn(() => true)

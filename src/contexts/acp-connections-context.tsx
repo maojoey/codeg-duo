@@ -314,6 +314,15 @@ export interface ConnectionState {
    *  `pending_plan_approval`; cleared on `plan_approval_resolved` or turn end. */
   pendingPlanApproval: PendingPlanApprovalState | null
   claudeApiRetry: ClaudeApiRetryState | null
+  /**
+   * Claude's predicted next user prompt (the SDK's `prompt_suggestion`, sent
+   * at most once per turn, AFTER the turn's result). The composer offers it as
+   * its placeholder while the box is empty; Tab takes it. Cleared when the
+   * next prompt starts — it answers the turn that just ended and nothing
+   * later. Client-local and transient like `claudeApiRetry`: not in the
+   * snapshot, so a client attaching after the turn simply has none.
+   */
+  promptSuggestion: string | null
   /** AIR typed session failure table (see `lib/session-failures.ts` for the
    *  merge/settle contract). Retained resolved — entries double as per-id
    *  revision watermarks; the banner splits active from resolved itself. */
@@ -707,6 +716,7 @@ type Action =
       contextKey: string
       retry: ClaudeApiRetryState | null
     }
+  | { type: "PROMPT_SUGGESTION"; contextKey: string; suggestion: string }
   | {
       // A `session`-kind `error` event (see `routeAcpError`), localized.
       type: "ERROR"
@@ -982,6 +992,20 @@ function parseClaudeApiRetryEvent(
     // gap in THIS message, so keep the existing fallback wording for it.
     reportsError: true,
   }
+}
+
+/**
+ * The suggestion text of Claude's `prompt_suggestion` SDK message, or `null`
+ * for any other message (or a blank suggestion, which offers nothing).
+ */
+function parseClaudePromptSuggestion(
+  event: Extract<AcpEvent, { type: "claude_sdk_message" }>
+): string | null {
+  const message = asRecord(event.message)
+  if (!message || message.type !== "prompt_suggestion") return null
+  if (typeof message.suggestion !== "string") return null
+  const suggestion = message.suggestion.trim()
+  return suggestion.length > 0 ? suggestion : null
 }
 
 function extractPermissionToolCallId(toolCall: unknown): string | null {
@@ -1612,6 +1636,7 @@ function connectionsReducer(
         pendingAskQuestion: null,
         pendingPlanApproval: null,
         claudeApiRetry: null,
+        promptSuggestion: null,
         sessionFailures: [],
         asyncTasks: [],
         error: null,
@@ -1673,6 +1698,7 @@ function connectionsReducer(
         pendingAskQuestion: null,
         pendingPlanApproval: null,
         claudeApiRetry: null,
+        promptSuggestion: null,
         sessionFailures: [],
         asyncTasks: [],
         error: null,
@@ -1916,6 +1942,7 @@ function connectionsReducer(
         }
         updated.pendingQuestion = null
         updated.claudeApiRetry = null
+        updated.promptSuggestion = null
         updated.error = null
         // Steering adoptions belong to the turn whose stream they split.
         updated.steeredMessageIds = EMPTY_STEERED_MESSAGE_IDS
@@ -2738,6 +2765,17 @@ function connectionsReducer(
       next.set(action.contextKey, {
         ...conn,
         claudeApiRetry: action.retry,
+      })
+      return next
+    }
+
+    case "PROMPT_SUGGESTION": {
+      const conn = state.get(action.contextKey)
+      if (!conn || conn.promptSuggestion === action.suggestion) return state
+      const next = new Map(state)
+      next.set(action.contextKey, {
+        ...conn,
+        promptSuggestion: action.suggestion,
       })
       return next
     }
@@ -4542,7 +4580,14 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
             parentToolUseId: e.parent_tool_use_id ?? undefined,
           })
           break
-        case "claude_sdk_message":
+        case "claude_sdk_message": {
+          // Arrives after the turn's result, so it neither interrupts the
+          // stream nor says anything about a retry in flight.
+          const suggestion = parseClaudePromptSuggestion(e)
+          if (suggestion !== null) {
+            dispatch({ type: "PROMPT_SUGGESTION", contextKey, suggestion })
+            break
+          }
           flushStreamingQueue(contextKey)
           dispatch({
             type: "CLAUDE_API_RETRY",
@@ -4550,6 +4595,7 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
             retry: parseClaudeApiRetryEvent(e),
           })
           break
+        }
         case "tool_call":
           settleRetryIncidentsOnProgress(contextKey)
           flushStreamingQueue(contextKey)

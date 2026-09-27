@@ -1392,7 +1392,10 @@
       "sendAttributionHeader": "Envoyer l'identifiant d'attribution/facturation à l'API",
       "sendAttributionHeaderAria": "Envoyer l'identifiant d'attribution/facturation de Claude Code à l'API",
       "disableNonessentialTraffic": "Désactiver la télémétrie ou les requêtes réseau superflues",
-      "disableNonessentialTrafficAria": "Désactiver la télémétrie ou les requêtes réseau superflues de Claude Code"
+      "disableNonessentialTrafficAria": "Désactiver la télémétrie ou les requêtes réseau superflues de Claude Code",
+      "promptSuggestions": "Suggérer le prochain message après chaque réponse",
+      "promptSuggestionsAria": "Laisser Claude Code suggérer le prochain message après chaque réponse",
+      "promptSuggestionsHint": "Affiché dans la zone de saisie vide ; appuyez sur Tab pour l'utiliser. Prend effet au démarrage d'une session."
     },
     "dialogs": {
       "confirmDeleteProvider": "Supprimer le provider {providerId} ?",
@@ -3096,6 +3099,7 @@
       },
       "messageInput": {
         "askAnything": "Posez n'importe quelle question...",
+        "promptSuggestionPlaceholder": "{suggestion}  (Tab pour utiliser)",
         "removeAttachmentAria": "Retirer {name}",
         "attachFiles": "Joindre des fichiers",
         "addActions": "Ajouter",

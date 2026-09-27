@@ -40,6 +40,9 @@ interface ConversationShellProps {
    *  `ComposerStatusStrips`). The session's errors are notifications, raised by
    *  the connections provider — none is drawn here. */
   claudeApiRetry: ClaudeApiRetryState | null
+  /** The agent's suggested next prompt, offered by the composer (see
+   *  `MessageInput.promptSuggestion`). Omit/`null` offers nothing. */
+  promptSuggestion?: string | null
   /** AIR typed session failures for this connection (active + resolved); the
    *  dock draws only the in-flight retry incidents. Omit/empty renders
    *  nothing. */
@@ -153,6 +156,7 @@ export function ConversationShell({
   defaultPath,
   agentName,
   claudeApiRetry,
+  promptSuggestion,
   sessionFailures,
   onSessionFailureDismiss,
   asyncTasks,
@@ -290,6 +294,7 @@ export function ConversationShell({
               folderPickerOverride={folderPickerOverride}
               draftStorageKey={draftStorageKey}
               getSentHistory={getSentHistory}
+              promptSuggestion={promptSuggestion}
               isActive={isActive}
               showActiveFlow={showActiveFlow}
               queue={queue}

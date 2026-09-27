@@ -1392,7 +1392,10 @@
       "sendAttributionHeader": "API に帰属/課金識別子を送信",
       "sendAttributionHeaderAria": "API に Claude Code の帰属/課金識別子を送信",
       "disableNonessentialTraffic": "テレメトリや不要なネットワークリクエストを無効化",
-      "disableNonessentialTrafficAria": "Claude Code のテレメトリや不要なネットワークリクエストを無効化"
+      "disableNonessentialTrafficAria": "Claude Code のテレメトリや不要なネットワークリクエストを無効化",
+      "promptSuggestions": "各返信の後に次のプロンプトを提案",
+      "promptSuggestionsAria": "各返信の後に Claude Code が次のプロンプトを提案する",
+      "promptSuggestionsHint": "空の入力欄に表示され、Tab キーで入力できます。セッション開始時に反映されます。"
     },
     "dialogs": {
       "confirmDeleteProvider": "Provider {providerId} を削除しますか？",
@@ -3096,6 +3099,7 @@
       },
       "messageInput": {
         "askAnything": "何でも質問してください...",
+        "promptSuggestionPlaceholder": "{suggestion}（Tab で入力）",
         "removeAttachmentAria": "{name} を削除",
         "attachFiles": "ファイルを添付",
         "addActions": "追加",

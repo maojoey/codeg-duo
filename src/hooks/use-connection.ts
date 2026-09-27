@@ -78,6 +78,9 @@ export interface UseConnectionReturn {
   pendingAskQuestion: PendingQuestionState | null
   pendingPlanApproval: PendingPlanApprovalState | null
   claudeApiRetry: ClaudeApiRetryState | null
+  /** Claude's predicted next prompt for the turn that just ended, or `null`
+   *  (see `ConnectionState.promptSuggestion`). */
+  promptSuggestion: string | null
   /** AIR typed session failure table (active + resolved; see
    *  `lib/session-failures.ts`). `[]` when the connection has none. */
   sessionFailures: SessionFailureRecord[]
@@ -262,6 +265,7 @@ export function useConnection(contextKey: string): UseConnectionReturn {
   const pendingAskQuestion = connection?.pendingAskQuestion ?? null
   const pendingPlanApproval = connection?.pendingPlanApproval ?? null
   const claudeApiRetry = connection?.claudeApiRetry ?? null
+  const promptSuggestion = connection?.promptSuggestion ?? null
   const sessionFailures = connection?.sessionFailures ?? EMPTY_SESSION_FAILURES
   const asyncTasks = connection?.asyncTasks ?? EMPTY_ASYNC_TASKS
   const error = connection?.error ?? null
@@ -369,6 +373,7 @@ export function useConnection(contextKey: string): UseConnectionReturn {
       pendingAskQuestion,
       pendingPlanApproval,
       claudeApiRetry,
+      promptSuggestion,
       sessionFailures,
       asyncTasks,
       error,
@@ -411,6 +416,7 @@ export function useConnection(contextKey: string): UseConnectionReturn {
       pendingAskQuestion,
       pendingPlanApproval,
       claudeApiRetry,
+      promptSuggestion,
       sessionFailures,
       asyncTasks,
       error,
