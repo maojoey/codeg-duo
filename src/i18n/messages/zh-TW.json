@@ -1401,7 +1401,10 @@
       "sendAttributionHeader": "向介面傳送歸屬/計費識別碼",
       "sendAttributionHeaderAria": "向介面傳送 Claude Code 歸屬/計費識別碼",
       "disableNonessentialTraffic": "停用遙測或多餘的網路請求",
-      "disableNonessentialTrafficAria": "停用 Claude Code 遙測或多餘的網路請求"
+      "disableNonessentialTrafficAria": "停用 Claude Code 遙測或多餘的網路請求",
+      "promptSuggestions": "每輪回覆後建議下一則訊息",
+      "promptSuggestionsAria": "允許 Claude Code 在每輪回覆後建議下一則訊息",
+      "promptSuggestionsHint": "顯示在空白的輸入框中，按 Tab 採用。新工作階段啟動後生效。"
     },
     "dialogs": {
       "confirmDeleteProvider": "確認刪除 Provider {providerId}？",
@@ -3156,6 +3159,7 @@
       },
       "messageInput": {
         "askAnything": "請開始輸入...",
+        "promptSuggestionPlaceholder": "{suggestion}（按 Tab 採用）",
         "removeAttachmentAria": "移除 {name}",
         "attachFiles": "附加檔案",
         "addActions": "新增",

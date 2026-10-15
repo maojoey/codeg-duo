@@ -211,6 +211,13 @@ export interface RichComposerProps {
     event: KeyboardEvent
   ) => boolean
   /**
+   * A bare Tab pressed while the document is EMPTY — the chat composer's "take
+   * the agent's suggested prompt" key. Return true to consume it; false (or
+   * omitting the prop) keeps Tab's default meaning, so a composer with nothing
+   * to offer never swallows it.
+   */
+  onEmptyTabKeyDown?: () => boolean
+  /**
    * Called on paste before the editor handles it. Return true when the paste was
    * consumed out-of-band (e.g. an image/file became an attachment) so the editor
    * does not also insert it as text.
@@ -266,6 +273,7 @@ export const RichComposer = forwardRef<RichComposerHandle, RichComposerProps>(
       isExternalMenuOpen,
       onExternalMenuKeyDown,
       onHistoryKeyDown,
+      onEmptyTabKeyDown,
       onPasteFiles,
       onDropFiles,
       onPlainPaste,
@@ -292,6 +300,7 @@ export const RichComposer = forwardRef<RichComposerHandle, RichComposerProps>(
     const isExternalMenuOpenRef = useRef(isExternalMenuOpen)
     const onExternalMenuKeyDownRef = useRef(onExternalMenuKeyDown)
     const onHistoryKeyDownRef = useRef(onHistoryKeyDown)
+    const onEmptyTabKeyDownRef = useRef(onEmptyTabKeyDown)
     const onPasteFilesRef = useRef(onPasteFiles)
     const onDropFilesRef = useRef(onDropFiles)
     const onPlainPasteRef = useRef(onPlainPaste)
@@ -313,6 +322,7 @@ export const RichComposer = forwardRef<RichComposerHandle, RichComposerProps>(
       isExternalMenuOpenRef.current = isExternalMenuOpen
       onExternalMenuKeyDownRef.current = onExternalMenuKeyDown
       onHistoryKeyDownRef.current = onHistoryKeyDown
+      onEmptyTabKeyDownRef.current = onEmptyTabKeyDown
       onPasteFilesRef.current = onPasteFiles
       onDropFilesRef.current = onDropFiles
       onPlainPasteRef.current = onPlainPaste
@@ -451,6 +461,21 @@ export const RichComposer = forwardRef<RichComposerHandle, RichComposerProps>(
                 event
               )
             }
+          }
+          // Suggested prompt: a bare Tab in an empty box is offered to the
+          // host first. After the menus, like history, so an open panel keeps
+          // Tab as its own confirm key.
+          if (
+            onEmptyTabKeyDownRef.current &&
+            event.key === "Tab" &&
+            !event.shiftKey &&
+            !event.altKey &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            editorInstanceRef.current?.isEmpty === true &&
+            onEmptyTabKeyDownRef.current()
+          ) {
+            return true
           }
           // Paste without formatting: Ctrl/⌘+Shift+V routes to the host, which
           // owns the clipboard read. Consume the key (suppressing the browser's

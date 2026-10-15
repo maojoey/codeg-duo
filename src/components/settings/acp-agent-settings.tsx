@@ -241,6 +241,10 @@ interface AgentDraft {
   // default on (disabled).
   claudeSendAttributionHeader: boolean
   claudeDisableNonessentialTraffic: boolean
+  // `CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION` ("true"/"false"): the predicted next
+  // prompt the composer offers after each turn. Absent follows Claude Code's
+  // own default (on) and the user's `promptSuggestionEnabled` setting.
+  claudePromptSuggestions: boolean
   codexAuthJsonText: string
   codexConfigTomlText: string
   /** Structured codex custom-model list (mirrors the catalog source sidecar).
@@ -594,6 +598,15 @@ const CLAUDE_ENV_FLAG_OFF = "0"
 // telemetry / redundant pings" → default ON (disabled).
 const CLAUDE_SEND_ATTRIBUTION_HEADER_DEFAULT = false
 const CLAUDE_DISABLE_NONESSENTIAL_TRAFFIC_DEFAULT = true
+
+// Prompt suggestions are NOT a hardening flag: Claude Code's default is what we
+// want, so the switch writes only when touched and is never materialized on
+// save. The CLI documents this variable as "true"/"false"; any other value
+// reads as on, and only an explicit falsy one turns it off.
+const CLAUDE_PROMPT_SUGGESTION_ENV_KEY = "CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION"
+const CLAUDE_PROMPT_SUGGESTION_ON = "true"
+const CLAUDE_PROMPT_SUGGESTION_OFF = "false"
+const FALSY_ENV_VALUES = new Set(["0", "false", "no", "off"])
 
 const GEMINI_AUTH_MODES = [
   "custom",
@@ -1000,6 +1013,7 @@ function extractImportantConfigValues(
   claudeCustomModelOptionDescription: string
   claudeSendAttributionHeader: boolean
   claudeDisableNonessentialTraffic: boolean
+  claudePromptSuggestions: boolean
   configError: string | null
 } {
   const parseResult = parseConfigJsonText(configText)
@@ -1065,6 +1079,12 @@ function extractImportantConfigValues(
         ? nonessentialRaw === CLAUDE_ENV_FLAG_ON
         : CLAUDE_DISABLE_NONESSENTIAL_TRAFFIC_DEFAULT
       : false
+  const promptSuggestionRaw = findEnvValue(mergedEnv, [
+    CLAUDE_PROMPT_SUGGESTION_ENV_KEY,
+  ])
+  const claudePromptSuggestions =
+    agentType === "claude_code" &&
+    !FALSY_ENV_VALUES.has(promptSuggestionRaw.toLowerCase())
 
   return {
     apiBaseUrl: apiBaseUrl ?? "",
@@ -1089,6 +1109,7 @@ function extractImportantConfigValues(
       agentType === "claude_code" ? claudeCustomModelOptionDescription : "",
     claudeSendAttributionHeader,
     claudeDisableNonessentialTraffic,
+    claudePromptSuggestions,
     configError: parseResult.error,
   }
 }
@@ -3769,6 +3790,7 @@ function buildAgentDraft(agent: AcpAgentInfo): AgentDraft {
     claudeSendAttributionHeader: important.claudeSendAttributionHeader,
     claudeDisableNonessentialTraffic:
       important.claudeDisableNonessentialTraffic,
+    claudePromptSuggestions: important.claudePromptSuggestions,
     codexAuthJsonText,
     codexConfigTomlText,
     codexModelList: parseCodexModelConfig(agent.codex_model_catalog ?? null),
@@ -6054,6 +6076,7 @@ export function AcpAgentSettings() {
         claudeSendAttributionHeader: important.claudeSendAttributionHeader,
         claudeDisableNonessentialTraffic:
           important.claudeDisableNonessentialTraffic,
+        claudePromptSuggestions: important.claudePromptSuggestions,
       }))
     },
     [selectedAgent, selectedDraft, updateSelectedDraft]
@@ -6092,13 +6115,21 @@ export function AcpAgentSettings() {
     [selectedAgent, selectedDraft, t, updateSelectedDraft]
   )
 
-  // Toggle a Claude Code hardening flag: write the explicit "1"/"0" value into
-  // the native config's `env` (and the DB env overlay in lockstep).
+  // Toggle a Claude Code env flag: write the explicit on/off value (default
+  // "1"/"0") into the native config's `env` (and the DB env overlay in
+  // lockstep).
   const handleClaudeEnvFlagChange = useCallback(
     (
-      field: "claudeSendAttributionHeader" | "claudeDisableNonessentialTraffic",
+      field:
+        | "claudeSendAttributionHeader"
+        | "claudeDisableNonessentialTraffic"
+        | "claudePromptSuggestions",
       envKey: string,
-      enabled: boolean
+      enabled: boolean,
+      values: { on: string; off: string } = {
+        on: CLAUDE_ENV_FLAG_ON,
+        off: CLAUDE_ENV_FLAG_OFF,
+      }
     ) => {
       if (
         !selectedAgent ||
@@ -6106,7 +6137,7 @@ export function AcpAgentSettings() {
         selectedAgent.agent_type !== "claude_code"
       )
         return
-      const value = enabled ? CLAUDE_ENV_FLAG_ON : CLAUDE_ENV_FLAG_OFF
+      const value = enabled ? values.on : values.off
       const next = setClaudeEnvFlagInConfigText(
         selectedDraft.configText,
         envKey,
@@ -12134,6 +12165,31 @@ supports_websockets = true`}
                               )}
                             />
                           </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                            <label className="text-2xs text-muted-foreground">
+                              {t("claude.promptSuggestions")}
+                            </label>
+                            <Switch
+                              checked={selectedDraft.claudePromptSuggestions}
+                              onCheckedChange={(checked) => {
+                                handleClaudeEnvFlagChange(
+                                  "claudePromptSuggestions",
+                                  CLAUDE_PROMPT_SUGGESTION_ENV_KEY,
+                                  checked,
+                                  {
+                                    on: CLAUDE_PROMPT_SUGGESTION_ON,
+                                    off: CLAUDE_PROMPT_SUGGESTION_OFF,
+                                  }
+                                )
+                              }}
+                              aria-label={t("claude.promptSuggestionsAria")}
+                            />
+                          </div>
+                          <p className="text-3xs text-muted-foreground">
+                            {t("claude.promptSuggestionsHint")}
+                          </p>
                         </div>
                       </div>
                     ) : (

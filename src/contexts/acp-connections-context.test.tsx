@@ -5897,6 +5897,66 @@ describe("AcpConnectionsProvider retry banner (turn_retrying)", () => {
   })
 })
 
+// Claude's `prompt_suggestion` rides the raw SDK channel after the turn's
+// result. It is offered until the next prompt starts, and must never be read
+// as an API-retry frame (which would clear a live retry banner).
+describe("AcpConnectionsProvider prompt suggestion", () => {
+  async function connectOwner(): Promise<AttachHandlers> {
+    h.acpFindConnectionForConversation.mockResolvedValue(null)
+    await mountProvider()
+    await act(async () => {
+      await h.actions!.connect(TAB, "claude_code", "/tmp/x", "sess-1", 42)
+    })
+    return latestAttachHandlers()
+  }
+
+  function suggestionEvent(seq: number, suggestion: unknown): EventEnvelope {
+    return {
+      seq,
+      connection_id: "spawned-conn",
+      type: "claude_sdk_message",
+      session_id: "sess-1",
+      message: { type: "prompt_suggestion", suggestion, session_id: "sess-1" },
+    }
+  }
+
+  it("stores the suggestion and clears it when the next prompt starts", async () => {
+    const handlers = await connectOwner()
+    emitAcpEvent(handlers, suggestionEvent(1, "  run the tests  "))
+    expect(h.store!.getConnection(TAB)?.promptSuggestion).toBe("run the tests")
+
+    emitAcpEvent(handlers, {
+      seq: 2,
+      connection_id: "spawned-conn",
+      type: "status_changed",
+      status: "prompting",
+    })
+    expect(h.store!.getConnection(TAB)?.promptSuggestion).toBeNull()
+  })
+
+  it("ignores a blank suggestion", async () => {
+    const handlers = await connectOwner()
+    emitAcpEvent(handlers, suggestionEvent(1, "   "))
+    expect(h.store!.getConnection(TAB)?.promptSuggestion).toBeNull()
+  })
+
+  it("leaves an in-flight retry banner alone", async () => {
+    const handlers = await connectOwner()
+    emitAcpEvent(handlers, {
+      seq: 1,
+      connection_id: "spawned-conn",
+      type: "turn_retrying",
+      message: "overloaded",
+      attempt: 1,
+    })
+    emitAcpEvent(handlers, suggestionEvent(2, "run the tests"))
+
+    const conn = h.store!.getConnection(TAB)
+    expect(conn?.claudeApiRetry?.attempt).toBe(1)
+    expect(conn?.promptSuggestion).toBe("run the tests")
+  })
+})
+
 // The idle sweep reclaims any connection that is neither the single `activeKey`
 // nor an open TAB. Canvas conversation cards are neither — they live on a board
 // that has no tabs at all — so a second live card would have its agent

@@ -1401,7 +1401,10 @@
       "sendAttributionHeader": "Attributions-/Abrechnungskennung an die API senden",
       "sendAttributionHeaderAria": "Attributions-/Abrechnungskennung von Claude Code an die API senden",
       "disableNonessentialTraffic": "Telemetrie oder überflüssige Netzwerkanfragen deaktivieren",
-      "disableNonessentialTrafficAria": "Telemetrie oder überflüssige Netzwerkanfragen von Claude Code deaktivieren"
+      "disableNonessentialTrafficAria": "Telemetrie oder überflüssige Netzwerkanfragen von Claude Code deaktivieren",
+      "promptSuggestions": "Nach jeder Antwort nächste Eingabe vorschlagen",
+      "promptSuggestionsAria": "Claude Code nach jeder Antwort die nächste Eingabe vorschlagen lassen",
+      "promptSuggestionsHint": "Erscheint im leeren Eingabefeld; mit Tab übernehmen. Wirkt ab dem Start einer Sitzung."
     },
     "dialogs": {
       "confirmDeleteProvider": "Provider {providerId} löschen?",
@@ -3156,6 +3159,7 @@
       },
       "messageInput": {
         "askAnything": "Fragen Sie alles...",
+        "promptSuggestionPlaceholder": "{suggestion}  (Tab zum Übernehmen)",
         "removeAttachmentAria": "{name} entfernen",
         "attachFiles": "Dateien anhängen",
         "addActions": "Hinzufügen",

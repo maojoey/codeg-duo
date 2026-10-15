@@ -1401,7 +1401,10 @@
       "sendAttributionHeader": "Send attribution/billing identifier to the API",
       "sendAttributionHeaderAria": "Send Claude Code attribution/billing identifier to the API",
       "disableNonessentialTraffic": "Disable telemetry or redundant network requests",
-      "disableNonessentialTrafficAria": "Disable Claude Code telemetry or redundant network requests"
+      "disableNonessentialTrafficAria": "Disable Claude Code telemetry or redundant network requests",
+      "promptSuggestions": "Suggest next prompt after each reply",
+      "promptSuggestionsAria": "Let Claude Code suggest the next prompt after each reply",
+      "promptSuggestionsHint": "Shown in the empty input box; press Tab to use it. Takes effect when a session starts."
     },
     "dialogs": {
       "confirmDeleteProvider": "Delete Provider {providerId}?",
@@ -3156,6 +3159,7 @@
       },
       "messageInput": {
         "askAnything": "Ask anything...",
+        "promptSuggestionPlaceholder": "{suggestion}  (Tab to use)",
         "removeAttachmentAria": "Remove {name}",
         "attachFiles": "Attach files",
         "attachLocalUpload": "Upload local file",

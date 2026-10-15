@@ -4701,6 +4701,18 @@ pub(crate) fn claude_raw_sdk_session_meta(
         "emitRawSDKMessages".to_string(),
         serde_json::Value::Bool(true),
     );
+    // Ask the SDK for its predicted next user prompt after each turn. The CLI
+    // still applies its own gates (first turn, plan mode, usage limits, the
+    // user's `promptSuggestionEnabled` setting and the
+    // `CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION` env var), so this only makes the
+    // suggestion reachable: claude-agent-acp drops it from the typed stream,
+    // and it arrives on the raw `_claude/sdkMessage` channel enabled above.
+    let mut options = serde_json::Map::new();
+    options.insert(
+        "promptSuggestions".to_string(),
+        serde_json::Value::Bool(true),
+    );
+    claude_code.insert("options".to_string(), serde_json::Value::Object(options));
 
     let mut meta = serde_json::Map::new();
     meta.insert(
@@ -15807,6 +15819,20 @@ fn is_claude_api_retry_message(message: &serde_json::Value) -> bool {
     matches!(message_type, Some("system")) && matches!(message_subtype, Some("api_retry"))
 }
 
+/// The SDK's `prompt_suggestion` message: the predicted next user prompt,
+/// emitted at most once per turn, after its `result`. Only a non-blank
+/// suggestion is worth a frontend round-trip.
+fn is_claude_prompt_suggestion_message(message: &serde_json::Value) -> bool {
+    let Some(obj) = message.as_object() else {
+        return false;
+    };
+    obj.get("type").and_then(|v| v.as_str()) == Some("prompt_suggestion")
+        && obj
+            .get("suggestion")
+            .and_then(|v| v.as_str())
+            .is_some_and(|s| !s.trim().is_empty())
+}
+
 /// The JSON-RPC method claude-agent-acp uses to mirror raw SDK messages. Named
 /// so `is_known_ext_method` and the mapper can't drift apart.
 const CLAUDE_SDK_EXT_METHOD: &str = "_claude/sdkMessage";
@@ -15817,7 +15843,7 @@ fn map_claude_sdk_ext_notification(notification: &UntypedMessage) -> Option<AcpE
     }
 
     let (session_id, message) = parse_claude_sdk_message_params(notification.params())?;
-    if !is_claude_api_retry_message(&message) {
+    if !is_claude_api_retry_message(&message) && !is_claude_prompt_suggestion_message(&message) {
         return None;
     }
     Some(AcpEvent::ClaudeSdkMessage {
@@ -16622,7 +16648,7 @@ fn handle_auth_status_update(agent_type: AgentType, notif: AuthStatusUpdateNotif
 /// Used ONLY to keep the unrecognized-method log quiet about methods we do know
 /// and merely declined to map this time. That distinction is the whole point:
 /// `_claude/sdkMessage` arrives for every SDK message and only maps when the
-/// payload is an API retry, so logging every unmapped one would put a line on a
+/// payload is an API retry or a prompt suggestion, so logging every unmapped one would put a line on a
 /// per-message hot path — the shape that once grew a server's log file to 217GB.
 ///
 /// Forgetting to list a newly-mapped method here fails in the SAFE direction —
@@ -22979,9 +23005,9 @@ mod tests {
     #[test]
     fn is_known_ext_method_covers_every_mapped_method() {
         // The anti-log-storm invariant: `_claude/sdkMessage` arrives for EVERY
-        // SDK message but only maps when it is an API retry, so it must be
-        // recognized here — otherwise each unmapped one logs a line on a
-        // per-message hot path.
+        // SDK message but only maps when it is an API retry or a prompt
+        // suggestion, so it must be recognized here — otherwise each unmapped
+        // one logs a line on a per-message hot path.
         assert!(is_known_ext_method(CLAUDE_SDK_EXT_METHOD));
         for method in GROK_EXT_UPDATE_METHODS {
             assert!(is_known_ext_method(method), "{method} must be known");
@@ -23002,6 +23028,48 @@ mod tests {
         )
         .unwrap();
         assert!(map_claude_sdk_ext_notification(&non_retry).is_none());
+    }
+
+    #[test]
+    fn map_claude_sdk_ext_notification_maps_prompt_suggestion() {
+        let raw = UntypedMessage::new(
+            "_claude/sdkMessage",
+            serde_json::json!({
+                "sessionId": "session-123",
+                "message": {
+                    "type": "prompt_suggestion",
+                    "suggestion": "run the tests",
+                    "uuid": "0b6c3d1e-8f1e-4a55-9a53-2f0f6f3f7d11",
+                    "session_id": "session-123"
+                }
+            }),
+        )
+        .unwrap();
+
+        match map_claude_sdk_ext_notification(&raw) {
+            Some(AcpEvent::ClaudeSdkMessage { message, .. }) => {
+                assert_eq!(
+                    message.get("suggestion").and_then(|v| v.as_str()),
+                    Some("run the tests")
+                );
+            }
+            _ => panic!("expected ClaudeSdkMessage"),
+        }
+    }
+
+    #[test]
+    fn map_claude_sdk_ext_notification_rejects_blank_prompt_suggestion() {
+        for suggestion in [serde_json::json!("   "), serde_json::json!(null)] {
+            let raw = UntypedMessage::new(
+                "_claude/sdkMessage",
+                serde_json::json!({
+                    "sessionId": "session-123",
+                    "message": {"type": "prompt_suggestion", "suggestion": suggestion}
+                }),
+            )
+            .unwrap();
+            assert!(map_claude_sdk_ext_notification(&raw).is_none());
+        }
     }
 
     #[test]
@@ -25463,6 +25531,15 @@ mod tests {
                 .as_ref()
                 .and_then(|m| m.get("claudeCode"))
                 .and_then(|v| v.get("emitRawSDKMessages"))
+                .and_then(|v| v.as_bool()),
+            Some(true)
+        );
+        assert_eq!(
+            req.meta
+                .as_ref()
+                .and_then(|m| m.get("claudeCode"))
+                .and_then(|v| v.get("options"))
+                .and_then(|v| v.get("promptSuggestions"))
                 .and_then(|v| v.as_bool()),
             Some(true)
         );

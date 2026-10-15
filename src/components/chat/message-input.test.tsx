@@ -812,6 +812,67 @@ describe("MessageInput injectContent", () => {
   })
 })
 
+// Claude's predicted next prompt: shown as the empty box's placeholder, typed
+// in (not sent) on Tab, and withheld while a turn runs.
+describe("MessageInput prompt suggestion", () => {
+  afterEach(() => {
+    cleanup()
+    composerHandle.current = null
+  })
+
+  async function mount(
+    props: Partial<React.ComponentProps<typeof MessageInput>>
+  ) {
+    const view = renderInput(props)
+    await waitFor(
+      () => expect(composerHandle.current?.getEditor()).toBeTruthy(),
+      { timeout: 5000 }
+    )
+    const editor = composerHandle.current?.getEditor()
+    if (!editor) throw new Error("composer editor not mounted")
+    return { view, editor }
+  }
+
+  function pressTab(editor: Editor): KeyboardEvent {
+    const event = new KeyboardEvent("keydown", {
+      key: "Tab",
+      bubbles: true,
+      cancelable: true,
+    })
+    act(() => {
+      editor.view.dom.dispatchEvent(event)
+    })
+    return event
+  }
+
+  it("shows the suggestion and types it in on Tab without sending", async () => {
+    const onSend = vi.fn()
+    const { view, editor } = await mount({
+      onSend,
+      promptSuggestion: "run the tests",
+    })
+    expect(
+      view.container.querySelector(
+        '[data-placeholder="run the tests  (Tab to use)"]'
+      )
+    ).not.toBeNull()
+
+    expect(pressTab(editor).defaultPrevented).toBe(true)
+    expect(serializeDocToText(editor.state.doc)).toBe("run the tests")
+    expect(onSend).not.toHaveBeenCalled()
+  })
+
+  it("offers nothing while the agent is responding", async () => {
+    const { editor } = await mount({
+      promptSuggestion: "run the tests",
+      isPrompting: true,
+      onCancel: vi.fn(),
+    })
+    expect(pressTab(editor).defaultPrevented).toBe(false)
+    expect(serializeDocToText(editor.state.doc)).toBe("")
+  })
+})
+
 // The sidebar's "add to session" drops a session mention — the same reference the
 // `@` panel's Sessions group builds — into the active tab's composer.
 describe("MessageInput session-mention attach", () => {

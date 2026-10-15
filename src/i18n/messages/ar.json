@@ -1401,7 +1401,10 @@
       "sendAttributionHeader": "إرسال معرّف الإسناد/الفوترة إلى الواجهة",
       "sendAttributionHeaderAria": "إرسال معرّف الإسناد/الفوترة الخاص بـ Claude Code إلى الواجهة",
       "disableNonessentialTraffic": "تعطيل القياس عن بُعد أو طلبات الشبكة غير الضرورية",
-      "disableNonessentialTrafficAria": "تعطيل القياس عن بُعد أو طلبات الشبكة غير الضرورية في Claude Code"
+      "disableNonessentialTrafficAria": "تعطيل القياس عن بُعد أو طلبات الشبكة غير الضرورية في Claude Code",
+      "promptSuggestions": "اقتراح الرسالة التالية بعد كل رد",
+      "promptSuggestionsAria": "السماح لـ Claude Code باقتراح الرسالة التالية بعد كل رد",
+      "promptSuggestionsHint": "تظهر في مربع الإدخال الفارغ؛ اضغط Tab لاستخدامها. تسري عند بدء جلسة."
     },
     "dialogs": {
       "confirmDeleteProvider": "حذف المزود {providerId}؟",
@@ -3156,6 +3159,7 @@
       },
       "messageInput": {
         "askAnything": "اسأل أي شيء...",
+        "promptSuggestionPlaceholder": "{suggestion}  (Tab للاستخدام)",
         "removeAttachmentAria": "إزالة {name}",
         "attachFiles": "إرفاق ملفات",
         "addActions": "إضافة",

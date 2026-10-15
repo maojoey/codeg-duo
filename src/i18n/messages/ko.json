@@ -1401,7 +1401,10 @@
       "sendAttributionHeader": "API에 속성/청구 식별자 전송",
       "sendAttributionHeaderAria": "API에 Claude Code 속성/청구 식별자 전송",
       "disableNonessentialTraffic": "텔레메트리 또는 불필요한 네트워크 요청 비활성화",
-      "disableNonessentialTrafficAria": "Claude Code 텔레메트리 또는 불필요한 네트워크 요청 비활성화"
+      "disableNonessentialTrafficAria": "Claude Code 텔레메트리 또는 불필요한 네트워크 요청 비활성화",
+      "promptSuggestions": "응답 후 다음 프롬프트 제안",
+      "promptSuggestionsAria": "각 응답 후 Claude Code가 다음 프롬프트를 제안하도록 허용",
+      "promptSuggestionsHint": "빈 입력란에 표시되며 Tab 키로 입력합니다. 세션을 시작할 때 적용됩니다."
     },
     "dialogs": {
       "confirmDeleteProvider": "Provider {providerId}를 삭제하시겠습니까?",
@@ -3156,6 +3159,7 @@
       },
       "messageInput": {
         "askAnything": "무엇이든 물어보세요...",
+        "promptSuggestionPlaceholder": "{suggestion} (Tab으로 입력)",
         "removeAttachmentAria": "{name} 제거",
         "attachFiles": "파일 첨부",
         "addActions": "추가",
